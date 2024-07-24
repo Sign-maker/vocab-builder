@@ -1,4 +1,4 @@
-import { lazy } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { ROUTES } from "../constants/routesConstants";
 import { Layout } from "./Layout/Layout";
 import {
@@ -8,6 +8,8 @@ import {
 } from "react-router-dom";
 import { PrivateRoute } from "./PrivateRoute";
 import { RestrictedRoute } from "./RestrictedRoute";
+import { Loader } from "./Loader/Loader";
+import { useAuthStore } from "../zustandStore/authStore";
 
 const RegisterPage = lazy(() => import("../pages/RegisterPage/RegisterPage"));
 const LoginPage = lazy(() => import("../pages/LoginPage/LoginPage"));
@@ -20,9 +22,20 @@ const TrainingPage = lazy(() => import("../pages/TrainingPage/TrainingPage"));
 const routes = [
   {
     path: ROUTES.register,
-    element: <RestrictedRoute component={RegisterPage} />,
+    element: (
+      <Suspense fallback={<Loader />}>
+        <RestrictedRoute component={RegisterPage} />
+      </Suspense>
+    ),
   },
-  { path: ROUTES.login, element: <RestrictedRoute component={LoginPage} /> },
+  {
+    path: ROUTES.login,
+    element: (
+      <Suspense fallback={<Loader />}>
+        <RestrictedRoute component={LoginPage} />
+      </Suspense>
+    ),
+  },
   {
     path: ROUTES.main,
     element: <PrivateRoute redirectTo={ROUTES.login} component={Layout} />,
@@ -56,6 +69,18 @@ const routerOptions = {
 
 const router = createBrowserRouter(routes, routerOptions);
 
-const App = () => <RouterProvider router={router} />;
+const App = () => {
+  const getCurrentUser = useAuthStore((state) => state.getCurrentUser);
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    if (firstRender.current) {
+      getCurrentUser();
+      firstRender.current = false;
+    }
+  }, [getCurrentUser]);
+
+  return <RouterProvider router={router} />;
+};
 
 export default App;

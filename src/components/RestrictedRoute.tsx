@@ -1,5 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { useAuthStore } from "../zustandStore/authStore";
 
 interface RestrictedRouteProps {
   redirectTo?: string;
@@ -10,7 +11,7 @@ export const RestrictedRoute: React.FC<RestrictedRouteProps> = ({
   redirectTo = "/",
   component: Component,
 }) => {
-  const isLoggedIn = true;
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   return isLoggedIn ? <Navigate to={redirectTo} /> : <Component />;
 };
