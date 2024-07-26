@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, useEffect, useRef } from "react";
 import { ROUTES } from "../constants/routesConstants";
 import { Layout } from "./Layout/Layout";
 import {
@@ -8,8 +8,9 @@ import {
 } from "react-router-dom";
 import { PrivateRoute } from "./PrivateRoute";
 import { RestrictedRoute } from "./RestrictedRoute";
-import { Loader } from "./Loader/Loader";
 import { useAuthStore } from "../zustandStore/authStore";
+import { AuthLayout } from "./AuthLayout/AuthLayout";
+import { Loader } from "./Loader/Loader";
 
 const RegisterPage = lazy(() => import("../pages/RegisterPage/RegisterPage"));
 const LoginPage = lazy(() => import("../pages/LoginPage/LoginPage"));
@@ -21,21 +22,20 @@ const TrainingPage = lazy(() => import("../pages/TrainingPage/TrainingPage"));
 
 const routes = [
   {
-    path: ROUTES.register,
-    element: (
-      <Suspense fallback={<Loader />}>
-        <RestrictedRoute component={RegisterPage} />
-      </Suspense>
-    ),
+    path: ROUTES.auth,
+    element: <RestrictedRoute component={AuthLayout} />,
+    children: [
+      {
+        path: ROUTES.login,
+        element: <RestrictedRoute component={LoginPage} />,
+      },
+      {
+        path: ROUTES.register,
+        element: <RestrictedRoute component={RegisterPage} />,
+      },
+    ],
   },
-  {
-    path: ROUTES.login,
-    element: (
-      <Suspense fallback={<Loader />}>
-        <RestrictedRoute component={LoginPage} />
-      </Suspense>
-    ),
-  },
+
   {
     path: ROUTES.main,
     element: <PrivateRoute redirectTo={ROUTES.login} component={Layout} />,
@@ -71,6 +71,7 @@ const router = createBrowserRouter(routes, routerOptions);
 
 const App = () => {
   const getCurrentUser = useAuthStore((state) => state.getCurrentUser);
+  const isRefreshing = useAuthStore((state) => state.isRefreshing);
   const firstRender = useRef(true);
 
   useEffect(() => {
@@ -80,7 +81,7 @@ const App = () => {
     }
   }, [getCurrentUser]);
 
-  return <RouterProvider router={router} />;
+  return <>{isRefreshing ? <Loader /> : <RouterProvider router={router} />}</>;
 };
 
 export default App;

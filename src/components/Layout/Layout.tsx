@@ -1,12 +1,19 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Loader } from "../Loader/Loader";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../constants/routesConstants";
 import { useAuthStore } from "../../zustandStore/authStore";
 
 export const Layout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const signOut = useAuthStore((state) => state.signOut);
+
+  useEffect(() => {
+    if (location.pathname === ROUTES.main) {
+      navigate(ROUTES.dictionary);
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <>
@@ -14,7 +21,6 @@ export const Layout = () => {
         Layout
         <button onClick={signOut}>LogOut</button>
       </header>
-      {location.pathname === ROUTES.main && <Navigate to={ROUTES.dictionary} />}
       <main>
         <Suspense fallback={<Loader />}>
           <Outlet />
